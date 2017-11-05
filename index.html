@@ -67,7 +67,7 @@
                 map.setCenter(results[0].geometry.location);
 		var image = {
           url: URL.createObjectURL(document.getElementById('image').files[0]),
-          size: new google.maps.Size(600, 480),
+          scaledSize: new google.maps.Size(120, 80),
           origin: new google.maps.Point(0, 0),
           anchor: new google.maps.Point(0, 32)
         };
