@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Marker Clustering</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="JavaScript:handleLocation()">
+  		<div class="form-row" action="handleLocation()">
+    		<div class="col-7">
+      			<input type="text" class="form-control" id="address" placeholder="City">
+    		</div>
+    		<div class="col">
+                <input type="file" id="image" name="pic" accept="image/*">
+    		</div>
+    		<div class="col">
+      			<input type="submit" class="form-control">
+    		</div>
+  		</div>
+	</form>
+ 
+    <div id="map"></div>
+    <script>
+      var map;
+      var geocoder;
+      var uluru;
+
+      function initMap() {
+        uluru = {lat: -25.363, lng: 131.044};
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 3,
+          center: {lat: -28.024, lng: 140.887}
+        });
+        geocoder = new google.maps.Geocoder();
+     }
+        // Create an array of alphabetical characters used to label the markers.
+        var labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        // Add some markers to the map.
+        // Note: The code uses the JavaScript Array.prototype.map() method to
+        // create an array of markers based on a given "locations" array.
+        // The map() method here has nothing to do with the Google Maps API.
+       
+    function drawMarkers(address)
+    {
+        var mark;
+		geocoder.geocode( { 'address': address}, function(results, status) {
+      		if (status == 'OK') {
+
+                map.setCenter(results[0].geometry.location);
+		var image = {
+          url: URL.createObjectURL(document.getElementById('image').files[0]),
+          size: new google.maps.Size(600, 480),
+          origin: new google.maps.Point(0, 0),
+          anchor: new google.maps.Point(0, 32)
+        };
+
+        mark = new google.maps.Marker({
+            map: map,
+            position: results[0].geometry.location,
+            icon: image
+        });
+        var contentString
+        var formData = new FormData();
+        formData.append('image', document.getElementById('image').files[0]);
+  				mark.addListener('click', function() {
+				 $.ajax({
+                url: "http://ec2-54-174-40-239.compute-1.amazonaws.com/uploader",
+                type: "POST",
+                data: formData,
+				processData: false,
+				contentType: false,
+                success: function(msg) {
+					contentString = '<div id="content">'+
+                '<div id="siteNotice">'+
+                '</div>'+
+                '<h5 id="thirdHeading" class="thirdHeading">Story of the journey</h5>'+
+                '<div id="bodyContent">'+
+                '<p>'+msg.message+'</p>'
+                '</div>'+
+                '</div>';
+                },
+                error:function(msg) {
+                    $("#status").show();
+                    $("#status").text("There Was an Error!");
+                }
+            });
+
+  		        var infowindow = new google.maps.InfoWindow({
+    		        content: contentString
+  		        });
+    		    
+                infowindow.open(map, mark);
+  			});
+        // Add a marker clusterer to manage the markers.
+            var markerCluster = new MarkerClusterer(map, mark,{
+            imagePath: document.getElementById('image').files[0]});
+      		} else {
+        		alert('Geocode was not successful for the following reason: ' + status);
+      		}
+    	});
+
+    }
+
+    function handleLocation()
+    {
+      var address = document.getElementById('address').value;
+      drawMarkers(address);
+      
+    }
+    </script>
+    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBuwsQmRBBWr4H8pw_JIUg-8NJMcgKj-HM&callback=initMap">
+    </script>
+  </body>
+</html>
